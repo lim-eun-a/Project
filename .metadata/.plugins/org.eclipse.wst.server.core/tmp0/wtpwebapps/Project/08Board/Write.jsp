@@ -2,6 +2,8 @@
     pageEncoding="UTF-8"%> 
     <!-- 로그인 정보가 없다면 로그인 페이지로 이동 -->
 <%@ include file="./IsLoggedIn.jsp"%>  
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <!DOCTYPE html>
 <html>
 <head>
@@ -24,10 +26,11 @@ function validateForm(form) {  // 폼 내용 검증
 </head>
 <body>
 <jsp:include page="../Common/Link.jsp" />
-<h2>회원제 게시판 - 글쓰기(Write)</h2>
+<div style="margin-top:70px;"></div>
+<h1 align="center">COMMUNITY-글쓰기</h1>
 <form name="writeFrm" method="post" action="WriteProcess.jsp"
       onsubmit="return validateForm(this);">
-    <table border="1" width="90%">
+    <table class="table" border="1" width="90%" align="center">
         <tr>
             <td>제목</td>
             <td>

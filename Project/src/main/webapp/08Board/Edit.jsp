@@ -3,6 +3,8 @@
 <%@ page import = "model1.board.BoardDTO" %>
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <%@ include file="./IsLoggedIn.jsp" %>
 <%
 String num = request.getParameter("num");
@@ -37,11 +39,12 @@ function validateForm(form){
 </head>
 <body>
 <jsp:include page="../Common/Link.jsp" />
-<h2>회원제 게시판 - 수정하기(Edit)</h2>
+<div style="margin-top:70px;"></div>
+<h1 align="center">COMMUNITY-수정하기</h1>
 <form name="writeFrm" method="post" action="EditProcess.jsp"
 	onsubmit="return validateForm(this);">
 	<input type="hidden" name="num" value="<%=dto.getNum() %>" />
-	<table border="1" width="90%">
+	<table class="table" border="1" width="90%" align="center">
 		<tr>
 			<td>제목</td>
 			<td>

@@ -2,6 +2,8 @@
 <%@ page import = "model1.board.BoardDTO" %>
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <%
 String num = request.getParameter("num");
 
@@ -29,10 +31,11 @@ function deletePost() {
 </head>
 <body>
 <jsp:include page="../Common/Link.jsp" />
-<h2>회원제 게시판 - 상세 보기(View)</h2>
+<div style="margin-top:70px;"></div>
+<h1 align="center">COMMUNITY-상세보기</h1>
 <form name="writeFrm">
 <input type="hidden" name="num" value="<%= num %>" />  
-    <table border="1" width="90%">
+    <table class="table-bordered" border="1" width="90%" align="center">
         <tr>
             <td>번호</td>
             <td><%= dto.getNum() %></td>

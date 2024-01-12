@@ -1,83 +1,164 @@
-<%@ page import = "java.util.List" %>
-<%@ page import = "java.util.HashMap" %>
-<%@ page import = "java.util.Map" %>
-<%@ page import = "model1.board.BoardDAO" %>
-<%@ page import = "model1.board.BoardDTO" %>
-<%@ page language="java" contentType="text/html; charset=UTF-8"
-    pageEncoding="UTF-8"%>
+<%@page import="utils.BoardPage"%>
+<%@page import="java.util.List"%>
+<%@page import="java.util.Map"%>
+<%@page import="model1.board.BoardDTO"%>
+<%@page import="java.util.HashMap"%>
+<%@page import="model1.board.BoardDAO"%>
+<%@ page language="java" contentType="text/html; charset=EUC-KR"
+    pageEncoding="EUC-KR"%>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <%
+//DB¿¬°á ¹× CRUDÀÛ¾÷À» À§ÇÑ DAO°´Ã¼¸¦ »ı¼ºÇÑ´Ù.
 BoardDAO dao = new BoardDAO(application);
 
-// í•„ë“œëª…ê³¼ ê²€ìƒ‰ì–´ë¥¼ ì €ì¥í•  Mapì»¬ë™ì…˜
+/*
+°Ë»ö¾î°¡ ÀÖ´Â °æ¿ì Å¬¶óÀÌ¾ğÆ®°¡ ¼±ÅÃÇÑ ÇÊµå¸í°ú °Ë»ö¾î¸¦ ÀúÀåÇÒ 
+MapÄÃ·º¼ÇÀ» »ı¼ºÇÑ´Ù.
+*/
 Map<String, Object> param = new HashMap<String, Object>();
-
+/*
+°Ë»öÆû¿¡¼­ ÀÔ·ÂÇÑ °Ë»ö¾î¿Í ÇÊµå¸íÀ» ÆÄ¶ó¹ÌÅÍ·Î ¹Ş¾Æ¿Â´Ù.
+ÇØ´ç <form>ÀÇ Àü¼Û¹æ½ÄÀº get, action¼Ó¼ºÀº ¾ø´Â »óÅÂÀÌ¹Ç·Î
+ÇöÀç ÆäÀÌÁö·Î Æû°ªÀÌ Àü¼ÛµÈ´Ù.
+*/
 String searchField = request.getParameter("searchField");
 String searchWord = request.getParameter("searchWord");
-
-if(searchWord!=null){
-	param.put("searchField", searchField);
-	param.put("searchWord", searchWord);
+//»ç¿ëÀÚ°¡ ÀÔ·ÂÇÑ °Ë»ö¾î°¡ ÀÖ´Ù¸é...
+if (searchWord != null) {
+/* MapÄÃ·º¼Ç¿¡ ÄÃ·³¸í°ú °Ë»ö¾î¸¦ Ãß°¡ÇÑ´Ù. */
+param.put("searchField", searchField);
+param.put("searchWord", searchWord);
 }
+//MapÄİ·º¼ÇÀ» ÀÎ¼ö·Î °Ô½Ã¹°ÀÇ °¹¼ö¸¦ Ä«¿îÆ®ÇÑ´Ù.
+int totalCount = dao.selectCount(param);  
 
-int totalCount = dao.selectCount(param);
-List<BoardDTO> boardLists = dao.selectList(param);
+/*** ÆäÀÌÂ¡ ÄÚµå Ãß°¡ ºÎºĞ ***/
+//web.xml¿¡ ¼³Á¤ÇÑ ÄÁÅØ½ºÆ® ÃÊ±âÈ­ ÆÄ¶ó¹ÌÅÍ¸¦ ÀĞ¾î¿Í¼­ »ê¼ú¿¬»êÀ» À§ÇØ
+//Á¤¼ö(int)·Î º¯È¯ÇÑ´Ù. ÀüÃ¼ ÆäÀÌÁö¼ö °è»ê
+int pageSize = 
+Integer.parseInt(application.getInitParameter("POSTS_PER_PAGE"));
+int blockPage = 
+Integer.parseInt(application.getInitParameter("PAGES_PER_BLOCK"));
+/*
+ÀüÃ¼ ÆäÀÌÁö¼ö¸¦ °è»êÇÑ´Ù.
+(ÀüÃ¼ °Ô½Ã¹°°¹¼ö / ÆäÀÌÁö´ç Ãâ·ÂÇÒ °Ô½Ã¹° °¹¼ö) => °á°ú°ªÀÇ ¿Ã¸²Ã³¸®
+°¡·É °Ô½Ã¹°ÀÇ °¹¼ö°¡ 51°³¶ó¸é ³ª´³À»¶§ °á°ú°¡ 5.1ÀÌ µÈ´Ù. ÀÌ¶§ ¹«Á¶°Ç
+¿Ã¸²Ã³¸® ÇÏ¿© 6ÆäÀÌÁö°¡ ³ª¿À°Ô µÈ´Ù.
+¸¸¾à totalcount¸¦ double·Î Çüº¯È¯ÇÏÁö ¾ÊÀ¸¸é Á¤¼öÀÇ °á°ú°¡ ³ª¿À°ÔµÇ¹Ç·Î
+6ÆäÀÌÁö°¡ ¾Æ´Ï¶ó 5ÆäÀÌÁö°¡ µË´Ï´Ù. µû¶ó¼­ ÁÖÀÇÇØ¾ß ÇÑ´Ù.
+*/
+int totalPage = (int)Math.ceil((double)totalCount / pageSize); 	// ÀüÃ¼ ÆäÀÌÁö¼ö
+
+/*
+¸ñ·Ï¿¡ Ã³À½ ÁøÀÔÇßÀ» ¶§´Â ÆäÀÌÁö°ü·Ã ÆÄ¶ó¹ÌÅÍ°¡ ¾ø´Â »óÅÂÀÌ¹Ç·Î ¹«Á¶°Ç 
+1page·Î ÁöÁ¤ÇÑ´Ù. ¸¸¾à ÆÄ¶ó¹ÌÅÍ pageNumÀÌ ÀÖ´Ù¸é request³»Àå°´Ã¼¸¦ ÅëÇØ
+¹Ş¾Æ¿Â ÈÄ ÆäÀÌÁö¹øÈ£·Î ÁöÁ¤ÇÑ´Ù.
+List.jsp => ÀÌ¿Í°°ÀÌ ÆÄ¶ó¹ÌÅÍ°¡ ¾ø´Â »óÅÂÀÏ¶§´Â null
+List.jsp?pageNum= => ÀÌ¿Í°°ÀÌ ÆÄ¶ó¹ÌÅÍ´Â ÀÖ´Âµ¥ °ªÀÌ ¾øÀ» ¶§´Â ºó°ªÀ¸·Î
+	Ã¼Å©µÈ´Ù. µû·¡¼­ ¾Æ·¡ if¹®Àº 2°³ÀÇ Á¶°ÇÀ¸·Î ±¸¼ºÇØ¾ß ÇÑ´Ù.
+*/
+//ÇöÀç ÆäÀÌÁö È®ÀÎ
+int pageNum = 1; 
+String pageTemp = request.getParameter("pageNum");
+if (pageTemp != null && !pageTemp.equals(""))
+pageNum = Integer.parseInt(pageTemp); 	// ¿äÃ»¹ŞÀº ÆäÀÌÁö·Î ¼öÁ¤
+
+/*
+°Ô½Ã¹°ÀÇ ±¸°£À» °è»êÇÑ´Ù.
+°¢ ÆäÀÌÁöÀÇ ½ÃÀÛ¹øÈ£¿Í Á¾·á¹øÈ£¸¦ ÇöÀçÆäÀÌÁö¹øÈ£¿Í ÆäÀÌÁö»çÀÌÁî¸¦ ÅëÇØ
+°è»êÇÑ ÈÄ DAO·Î Àü´ŞÇÏ±â À§ÇØ MapÄÃ·¢¼Ç¿¡ Ãß°¡ÇÑ´Ù.
+*/
+//¸ñ·Ï¿¡ Ãâ·ÂÇÒ °Ô½Ã¹° ¹üÀ§ °è»ê
+int start = (pageNum - 1) * pageSize + 1;	// Ã¹ °Ô½Ã¹° ¹øÈ£
+int end = pageNum * pageSize;	// ¸¶Áö¸· °Ô½Ã¹° ¹øÈ£
+param.put("start", start);
+param.put("end", end);
+/*** ÆäÀÌÂ¡ ÄÚµå Ãß°¡ ºÎºĞ end ***/
+
+//¸ñ·Ï¿¡ Ãâ·ÂÇÒ °Ô½Ã¹°À» ÃßÃâÇÏ¿© ¹İÈ¯¹Ş´Â´Ù.
+List<BoardDTO> boardLists = dao.selectListPage(param);
+//ÀÚ¿øÇØÁ¦
 dao.close();
 %>
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
+<meta charset="EUC-KR">
 <title>Insert title here</title>
 </head>
 <body>
-    <jsp:include page="../Common/Link.jsp" />  
-
-    <h2>ëª©ë¡ ë³´ê¸°(List)</h2>
+<jsp:include page="../Common/Link.jsp" />
+<div style="margin-top:70px;"></div>
+<h1 align="center">COMMUNITY</h1>
     <form method="get">  
-    <table border="1" width="90%">
+    <table class="table table-hover" border="1" width="90%" align="center">
     <tr>
         <td align="center">
+        	<!-- °Ë»ö Ç×¸ñ(searchField)Àº Á¦¸ñ°ú ³»¿ë Áß ¼±ÅÃ -->
             <select name="searchField"> 
-                <option value="title">ì œëª©</option> 
-                <option value="content">ë‚´ìš©</option>
+                <option value="title">Á¦¸ñ</option> 
+                <option value="content">³»¿ë</option>
             </select>
             <input type="text" name="searchWord" />
-            <input type="submit" value="ê²€ìƒ‰í•˜ê¸°" />
+            <input type="submit" value="°Ë»öÇÏ±â" />
         </td>
     </tr>   
     </table>
     </form>
-    <table border="1" width="90%">
+    <!-- °Ô½Ã¹° ¸ñ·Ï Å×ÀÌºí(Ç¥) -->
+    <table class="table table-hover" border="1" width="90%" align="center">
+    	<!-- °¢ ÄÃ·³ÀÇ ÀÌ¸§ -->
         <tr>
-            <th width="10%">ë²ˆí˜¸</th>
-            <th width="50%">ì œëª©</th>
-            <th width="15%">ì‘ì„±ì</th>
-            <th width="10%">ì¡°íšŒìˆ˜</th>
-            <th width="15%">ì‘ì„±ì¼</th>
+            <th width="10%">¹øÈ£</th>
+            <th width="50%">Á¦¸ñ</th>
+            <th width="15%">ÀÛ¼ºÀÚ</th>
+            <th width="10%">Á¶È¸¼ö</th>
+            <th width="15%">ÀÛ¼ºÀÏ</th>
         </tr>
+        <!-- ¸ñ·ÏÀÇ ³»¿ë -->
 <%
 if (boardLists.isEmpty()) {
 %>
         <tr>
             <td colspan="5" align="center">
-                ë“±ë¡ëœ ê²Œì‹œë¬¼ì´ ì—†ìŠµë‹ˆë‹¤^^*
+                µî·ÏµÈ °Ô½Ã¹°ÀÌ ¾ø½À´Ï´Ù^^*
             </td>
         </tr>
 <%
 }
 else {
+	// Ãâ·ÂÇÒ °Ô½Ã¹°ÀÌ ÀÖ´Â °æ¿ì¿¡´Â È®Àå for¹®À¸·Î ListÄÃ·¢¼Ç¿¡
+	// ÀúÀåµÈ µ¥ÀÌÅÍÀÇ °¹¼ö¸¸Å­ ¹İº¹ÇÏ¿© Ãâ·ÂÇÑ´Ù.
     int virtualNum = 0; 
+	
+ 	// ÆäÀÌÁö°¡ Àû¿ëµÈ °¡»ó¹øÈ£¸¦ °è»êÇÏ±â À§ÇØ »ı¼ºÇÑ º¯¼ö
+    int countNum = 0;
+ 	
     for (BoardDTO dto : boardLists)
     {
-        virtualNum = totalCount--;   
+    	// ÇöÀç Ãâ·ÂÇÒ °Ô½Ã¹°ÀÇ °¹¼ö¿¡ µû¶ó Ãâ·Â¹øÈ£´Â ´Ş¶óÁö¹Ç·Î
+    	// totalCount¸¦ »ç¿ëÇÏ¿© °¡»ó¹øÈ£¸¦ ºÎ¿©ÇÑ´Ù.
+       /*  virtualNum = totalCount--;    */
+       
+       	// ÇöÀç ÆäÀÌÁö¹øÈ£¸¦ Àû¿ëÇÑ °¡»ó¹øÈ£ °è»êÇÏ±â
+    	// ÀüÃ¼ °Ô½Ã¹°¼ö - (((ÇöÀçÆäÀÌÁö-1)*ÇÑÆäÀÌÃâ·Â°¹¼ö) + countNumÁõ°¡Ä¡)
+    	virtualNum = totalCount - (((pageNum - 1) * pageSize) + countNum++);
+       
 %>
         <tr align="center">
+        	<!-- °Ô½Ã¹°ÀÇ °¡»ó ¹øÈ£ -->
             <td><%= virtualNum %></td>  
+            <!-- Á¦¸ñ -->
             <td align="left"> 
+            	<!--  °Ô½Ã¹°ÀÇ ÀÏ·Ã¹øÈ£°¡ ¸Å°³º¯¼ö·Î Àü´Ş -->
                 <a href="View.jsp?num=<%= dto.getNum() %>"><%= dto.getTitle() %></a> 
             </td>
-            <td align="center"><%= dto.getId() %></td>           
+            <!-- ÀÛ¼ºÀÚ ¾ÆÀÌµğ -->
+            <td align="center"><%= dto.getId() %></td>    
+            <!-- Á¶È¸¼ö -->       
             <td align="center"><%= dto.getVisitcount() %></td>   
+            <!-- ÀÛ¼ºÀÏ -->
             <td align="center"><%= dto.getPostdate() %></td>    
         </tr>
 <%
@@ -86,12 +167,28 @@ else {
 %>
     </table>
    
-    <table border="1" width="90%">
+    <table class="table table-hover" border="1" width="90%" align="center">
         <tr align="right">
-            <td><button type="button" onclick="location.href='Write.jsp';">ê¸€ì“°ê¸°
+        	<td align="center">
+        		<!-- 
+        			totalCount : ÀüÃ¼ °Ô½Ã¹°ÀÇ °¹¼ö
+        			pageSize : ÇÑÆäÀÌÁö¿¡ Ãâ·ÂÇÒ °Ô½Ã¹°ÀÇ °¹¼ö
+        			blockPage : ÇÑºí·°´ç Ãâ·ÂÇÒ ÆäÀÌÁö¹øÈ£ÀÇ °¹¼ö
+        			pageNum : ÇöÀç ÆäÀÌÁö ¹øÈ£
+        			request.getRequestURI() : request³»Àå°´Ã¼¸¦ ÅëÇØ ÇöÀçÆäÀÌÁöÀÇ
+        				HOST¸¦ Á¦¿ÜÇÑ ³ª¸ÓÁö °æ·Î¸íÀ» ¾ò¾î¿Ã ¼ö ÀÖ´Ù. ¿©±â¼­ ¾òÀº
+        				°æ·Î¸íÀ» ÅëÇØ "°æ·Ï¸í.jsp?pageNum=ÆäÀÌÁö¹øÈ£"¿Í °°Àº ¹Ù·Î
+        				°¡±â ¸µÅ©¸¦ »ı¼ºÇÑ´Ù.
+        		 -->
+        		<% 
+        		System.out.println("ÇöÀç°æ·Î="+ request.getRequestURI());
+        		%>
+        		<%= BoardPage.pagingStr(totalCount, pageSize,
+                       blockPage, pageNum, request.getRequestURI()) %> 
+        	</td>
+            <td><button type="button" onclick="location.href='Write.jsp';">±Û¾²±â
                 </button></td>
         </tr>
     </table>
 </body>
-
 </html>
